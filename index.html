@@ -1,153 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jordan Peterson Speech Generator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #111;
-            color: #f0f0f0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        h1 {
-            color: #e63946;
-        }
-        textarea, input, button {
-            width: 100%;
-            max-width: 600px;
-            margin: 10px 0;
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: none;
-        }
-        button {
-            background-color: #457b9d;
-            color: white;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #1d3557;
-        }
-        #speech {
-            white-space: pre-wrap;
-            background: #222;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            max-width: 800px;
-            width: 100%;
-        }
-        #voiceSelect {
-            margin: 10px 0;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jordan Peterson Speech Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1f1f1f;
+      color: #f0f0f0;
+      text-align: center;
+      padding: 40px;
+    }
+    .spinner {
+      border: 8px solid #444;
+      border-top: 8px solid #00c3ff;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    #playBtn {
+      display: none;
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #00c3ff;
+      color: #000;
+      border: none;
+      border-radius: 5px;
+    }
+    #errorMsg {
+      color: red;
+    }
+  </style>
 </head>
 <body>
-    <h1>Jordan Peterson Speech Generator</h1>
-    <input id="topic" type="text" placeholder="Enter a topic (e.g., Responsibility)" />
-    <button onclick="generateSpeech()">Generate Speech</button>
-    <button onclick="playSpeech()">Play Audio</button>
-    <div id="speech"></div>
-    
-    <select id="voiceSelect">
-        <option value="">Select a voice</option>
-    </select>
 
-    <script>
-        let lastSpeech = "";
-        let voices = [];
-        let selectedVoice = null;
+  <h1>Jordan Peterson Speech Generator</h1>
+  <p id="status">Generating audio...</p>
+  <div class="spinner" id="spinner"></div>
+  <button id="playBtn" onclick="playSpeech()">Play Again</button>
+  <p id="errorMsg"></p>
 
-        // Function to load voices once they are available
-        function loadVoices() {
-            voices = speechSynthesis.getVoices();
-            if (voices.length === 0) {
-                setTimeout(loadVoices, 100); // Retry if voices aren't available yet
-            } else {
-                populateVoiceList();
-            }
-        }
+  <script>
+    const text = `As the global population grows, the world feels increasingly cramped — not just physically, but ideologically.
+    We bump up against people with vastly different values, beliefs, and customs, and that can be bloody uncomfortable, ya know.
+    Ideally, we’d accept one another — a noble aim — but let’s not be naïve. Some differences are irreconcilable.
+    So what’s the next best thing? Tolerance. Not the weak-kneed version, but the kind forged through discipline and maturity.
+    It’s choosing not to lash out when provoked, not to vilify someone simply for being different.
+    Tolerance is the art of coexistence without capitulation — a courageous decision to maintain order amid potential chaos.
+    It’s what allows diverse societies to function without tearing themselves apart at the seams.
+    Acceptance is wonderful when it happens. But when it doesn’t, tolerance is our bloody moral duty.
+    Without it, civilization unravels. With it, we hold the chaos at bay — just barely.`;
 
-        // Populate voice selection dropdown
-        function populateVoiceList() {
-            const voiceSelect = document.getElementById('voiceSelect');
-            voiceSelect.innerHTML = '<option value="">Select a voice</option>'; // Reset options
+    function speak(text, onEndCallback) {
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 0.9;
+        utterance.onend = onEndCallback;
 
-            voices.forEach(voice => {
-                const option = document.createElement('option');
-                option.value = voice.name;
-                option.textContent = `${voice.name} (${voice.lang})`;
-                voiceSelect.appendChild(option);
-            });
+        // Log start of speech synthesis
+        console.log("Speech synthesis started...");
+        speechSynthesis.speak(utterance);
+      } else {
+        document.getElementById("errorMsg").textContent = "Your browser does not support speech synthesis.";
+      }
+    }
 
-            // Set the default selected voice to the first one
-            if (voices.length > 0) {
-                voiceSelect.value = voices[0].name;
-                selectedVoice = voices[0];
-            }
-        }
+    function playSpeech() {
+      console.log("Button clicked, starting speech...");
+      document.getElementById("status").textContent = "Playing...";
+      document.getElementById("spinner").style.display = "block";
+      document.getElementById("playBtn").style.display = "none";
+      
+      speak(text, () => {
+        console.log("Speech finished.");
+        document.getElementById("status").textContent = "Finished!";
+        document.getElementById("spinner").style.display = "none";
+        document.getElementById("playBtn").style.display = "inline-block";
+      });
+    }
 
-        // Wait for voices to load initially
-        loadVoices();
+    // Initial playback on load
+    window.onload = () => {
+      playSpeech();
+    };
+  </script>
+</body>
+</html>
 
-        // Function to generate the speech based on the input topic
-        function generateSpeech() {
-            const topic = document.getElementById('topic').value.trim();
-            const speechOutput = document.getElementById('speech');
-
-            if (!topic) {
-                speechOutput.textContent = 'Please enter a topic.';
-                return;
-            }
-
-            // The speech generated based on the input topic
-            const speech = `Now listen — when we talk about ${topic}, we're not just dealing with a casual idea, alright? We're dealing with something fundamental, something that speaks to the very structure of our society. 
-
-The world — it's chaotic. And without ${topic}, without some guiding principle to orient yourself, you’re just floundering in the abyss. And people don't realize — they really don't — how deep that abyss goes.
-
-So what do you do? You take responsibility. You confront ${topic} with honesty and strength. You tell the truth — or at least, you don't lie. And you voluntarily shoulder the burden, because that’s what gives your life meaning.
-
-Meaning, after all, is what protects you from suffering — from malevolence, from despair. And ${topic}? It’s a moral imperative, not a suggestion. Without it, we devolve. But with it? We stand a chance at order, and maybe even something like redemption.`;
-
-            // Display the generated speech in the HTML
-            speechOutput.textContent = speech;
-            lastSpeech = speech;
-        }
-
-        // Function to play the generated speech
-        function playSpeech() {
-            if (!lastSpeech) {
-                alert("Please generate a speech first.");
-                return;
-            }
-
-            if (!selectedVoice) {
-                alert("Please select a voice.");
-                return;
-            }
-
-            // Create the speech synthesis object
-            const speech = new SpeechSynthesisUtterance(lastSpeech);
-            speech.lang = selectedVoice.lang;  // Use the selected voice's language
-            speech.voice = selectedVoice; // Use the selected voice
-
-            // Play the speech using the browser's speech synthesis
-            speechSynthesis.speak(speech);
-        }
-
-        // Handle voice selection
-        document.getElementById('voiceSelect').addEventListener('change', function () {
-            const selectedVoiceName = this.value;
-            selectedVoice = voices.find(voice => voice.name === selectedVoiceName);
-        });
-    </script>
 </body>
 </html>
